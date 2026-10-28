@@ -1,0 +1,154 @@
+package Entities;
+
+import Entities.Enums.Habitats;
+import Entities.WildlifeScoringCards.ScoringCard;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+public class Scorer implements Runnable {
+    private Player player = null;
+    private Habitats habitat = null;
+    private ScoringCard scoringCard = null;
+    private static HashSet<Thread> wildlifeThreads = new HashSet<Thread>();
+    private static HashSet<Thread> habitatThreads = new HashSet<Thread>();
+
+    public Scorer(Player p, Habitats h) {
+        player = p;
+        habitat = h;
+    }
+
+    public Scorer(Player p, ScoringCard card) {
+        player = p;
+        scoringCard = card;
+    }
+
+    public static HashMap<Integer, Player> score(
+            ArrayList<Player> players,
+            ArrayList<ScoringCard> scoringCards
+    ) {
+        for (Player p : players) {
+            // add all scores to players
+            for (HabitatTiles h : p.getGraph().iterate()) {
+                h.highlights = new HashSet<String>();
+            }
+            for (Habitats h : Habitats.values()) {
+                Scorer s = new Scorer(p, h);
+                Thread t = new Thread(s);
+                t.setPriority(3);
+                habitatThreads.add(t);
+                // s.scorePlayer();
+                t.start();
+                p.setBonus(h, 0);
+            }
+            for (ScoringCard card : scoringCards) {
+                Scorer s = new Scorer(p, card);
+                Thread t = new Thread(s);
+                t.setPriority(2);
+                wildlifeThreads.add(t);
+                t.start();
+            }
+        }
+
+        awaitThreads(habitatThreads);
+        for (Habitats h : Habitats.values()) {
+            // add bonuses
+            // find max group
+            Integer max = 0;
+            Integer secondMax = 0;
+            for (Player p : players) {
+                if (p.getScore(h) > max) {
+                    max = p.getScore(h);
+                }
+                if (p.getScore(h) > secondMax && p.getScore(h) < max) {
+                    secondMax = p.getScore(h);
+                }
+            }
+            // find players with max and second max
+            ArrayList<Player> playersWithMax = new ArrayList<Player>();
+            ArrayList<Player> playersWithSecondMax = new ArrayList<Player>();
+            for (Player p : players) {
+                if (p.getGraph().getLargestContiguousGroup(h) == max) {
+                    playersWithMax.add(p);
+                } else if (p.getGraph().getLargestContiguousGroup(h) == secondMax) {
+                    playersWithSecondMax.add(p);
+                }
+            }
+            if (playersWithSecondMax.size() > 1) {
+                // no bonus points awarded if ties for second last
+                playersWithSecondMax = null;
+            }
+
+            switch (players.size()) {
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    switch (playersWithMax.size()) {
+                        case 1:
+                            playersWithMax.get(0).setBonus(h, 2);
+                            break;
+                        case 2:
+                            playersWithMax.get(0).setBonus(h, 1);
+                            playersWithMax.get(1).setBonus(h, 1);
+                            break;
+                    }
+                    break;
+                default:
+                    // catches 3 and 4
+                    switch (playersWithMax.size()) {
+                        case 1:
+                            playersWithMax.get(0).setBonus(h, 3);
+                            try {
+                                playersWithSecondMax.get(0).setBonus(h, 1);
+                            } catch (Exception e) {
+                            }
+                            break;
+                        case 2:
+                            playersWithMax.get(0).setBonus(h, 2);
+                            playersWithMax.get(1).setBonus(h, 2);
+                            break;
+                        default:
+                            // 3 and 4
+                            for (Player p : playersWithMax) {
+                                p.setBonus(h, 1);
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
+
+        awaitThreads(wildlifeThreads);
+
+        return new HashMap<Integer, Player>();
+    }
+
+    @Override
+    public void run() {
+        this.scorePlayer();
+    }
+
+    public void scorePlayer() {
+        if (habitat != null) {
+            player.setScore(habitat, player.getGraph().getLargestContiguousGroup(habitat));
+        } else if (scoringCard != null) {
+            player.setScore(scoringCard.getAnimal(), scoringCard.score(player));
+        }
+    }
+
+    // Block until every thread in the set has finished, then forget them. join() (rather than
+    // spinning on isAlive()) lets the other threads run on single-threaded runtimes like CheerpJ.
+    public static void awaitThreads(HashSet<Thread> set) {
+        for (Thread t : set) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+        set.clear();
+    }
+}

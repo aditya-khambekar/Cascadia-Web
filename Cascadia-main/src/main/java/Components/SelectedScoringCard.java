@@ -1,0 +1,61 @@
+package Components;
+
+import Entities.WildlifeScoringCards.BearCard;
+import Entities.WildlifeScoringCards.ElkCard;
+import Entities.WildlifeScoringCards.FoxCard;
+import Entities.WildlifeScoringCards.HawkCard;
+import Entities.WildlifeScoringCards.SalmonCard;
+import java.awt.*;
+import java.awt.image.*;
+import javax.swing.*;
+
+public class SelectedScoringCard extends JFrame {
+    private JPanel panel;
+    private JLabel label;
+
+    public SelectedScoringCard() {
+        super("Scoring Card Pop Up");
+        this.setSize(1000, 500);
+        this.setDefaultCloseOperation(HIDE_ON_CLOSE);
+        this.setResizable(false);
+        this.setAlwaysOnTop(true);
+        panel = new JPanel();
+        panel.setBackground(Color.BLACK);
+        panel.setLayout(new GridLayout(1, 5, 5, 0));
+
+        label = new JLabel();
+        label.setBackground(Color.WHITE);
+        label.setOpaque(true);
+        label.setVisible(true);
+
+        label.setVerticalAlignment(JLabel.CENTER);
+        label.setHorizontalAlignment(JLabel.CENTER);
+
+        this.add(panel);
+        panel.add(label);
+    }
+
+    public void addScoringCard(BearCard bc) {
+        processImage(bc.getImage());
+    }
+
+    public void addScoringCard(ElkCard ec) {
+        processImage(ec.getImage());
+    }
+
+    public void addScoringCard(FoxCard fc) {
+        processImage(fc.getImage());
+    }
+
+    public void addScoringCard(HawkCard hc) {
+        processImage(hc.getImage());
+    }
+
+    public void addScoringCard(SalmonCard sc) {
+        processImage(sc.getImage());
+    }
+
+    public void processImage(BufferedImage ig) {
+        label.setIcon(new ImageIcon(ig.getScaledInstance(500, 500, Image.SCALE_SMOOTH)));
+    }
+}

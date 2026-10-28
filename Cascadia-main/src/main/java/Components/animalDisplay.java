@@ -1,0 +1,62 @@
+package Components;
+
+import Entities.WildlifeTokens;
+import java.awt.*;
+import java.awt.event.*;
+import javax.swing.*;
+
+public class animalDisplay extends JComponent implements MouseListener {
+    private final int xSize = 70;
+    private final int ySize = 70;
+    private WildlifeTokens token;
+    private int xPos;
+    private int yPos;
+    private int numClicks;
+    private boolean allowClick;
+
+    public animalDisplay(int x, int y) {
+        super();
+        xPos = x;
+        yPos = y;
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {}
+
+    @Override
+    public void paint(Graphics g) {
+        if (token != null) {
+            g.drawImage(token.getImage(), 0, 0, 70, 70, null);
+        }
+    }
+
+    public void mouseClicked(MouseEvent e) {}
+
+    public void mousePressed(MouseEvent e) {
+        if (allowClick) {
+            numClicks++;
+        }
+    }
+
+    public void mouseReleased(MouseEvent e) {}
+
+    public void mouseEntered(MouseEvent e) {}
+
+    public void mouseExited(MouseEvent e) {}
+
+    public void setAnimalToken(WildlifeTokens tk) {
+        token = tk;
+    }
+
+    public Dimension getPreferredSize() {
+        return new Dimension(xSize, ySize);
+    }
+
+    public Dimension getMinimumSize() {
+        return new Dimension(xSize, ySize);
+    }
+
+    public Dimension getMaximumSize() {
+        return new Dimension(xSize, ySize);
+    }
+}
